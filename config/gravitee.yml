@@ -91,4 +91,6 @@ ds:
     dbname: gravitee
     uri: ${MONGODB_ADDON_URI}
   elastic:
-    uri: ${ES_ADDON_URI}
+    uri: ${ES_URI}
+
+#    uri: ${ES_ADDON_URI}
