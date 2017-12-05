@@ -1,0 +1,94 @@
+############################################################################################################
+#################################### Gravitee.IO Gateway - Configuration ###################################
+############################################################################################################
+
+# Gateway HTTP server
+http:
+  port: 8080
+management:
+  type: mongodb
+  mongodb:
+     uri: ${ds.mongodb.uri}
+
+ratelimit:
+  type: mongodb
+  mongodb:
+    uri: ${ds.mongodb.uri}
+
+cache:
+  type: ehcache
+
+# Reporters configuration (used to store reporting monitoring data, request metrics, healthchecks and others...
+reporters:
+  # Reporting system configuration
+  system:
+    buffersize: 4096 # Must be a power of 2
+
+  # Elasticsearch reporter
+  elasticsearch:
+    enabled: true # Is the reporter enabled or not (default to true)
+    endpoints:
+      - ${ds.elastic.uri}
+
+# Gateway service configurations. Provided values are default values.
+# All services are enabled by default. To stop one of them, you have to add the property 'enabled: false' (See the
+# 'local' service for an example).
+services:
+  core:
+    http:
+      enabled: true
+      port: 18082
+      host: localhost
+      authentication:
+        # authentication type to be used for the core services
+        # - none : to disable authentication
+        # - basic : to use basic authentication
+        # default is "basic"
+        type: basic
+        users:
+          admin: adminadmin
+
+  # Synchronization daemon used to keep the gateway state in sync with the configuration from the management repository
+  # Be aware that, by disabling it, the gateway will not be sync with the configuration done through management API
+  # and management UI
+  sync:
+    # Synchronization is done each 5 seconds
+    cron: '*/5 * * * * *'
+
+  # Service used to store and cache api-keys from the management repository to avoid direct repository communication
+  # while serving requests.
+  apikeyscache:
+    delay: 10000
+    unit: MILLISECONDS
+    threads: 3 # Threads core size used to retrieve api-keys from repository.
+
+  # Local registry service.
+  # This registry is used to load API Definition with json format from the file system. By doing so, you do not need
+  # to configure your API using the web console or the rest API (but you need to know and understand the json descriptor
+  # format to make it work....)
+  local:
+    enabled: false
+    path: ${gravitee.home}/apis # The path to API descriptors
+
+  # Gateway monitoring service.
+  # This service retrieves metrics like os / process / jvm metrics and send them to an underlying reporting service.
+  monitoring:
+    delay: 5000
+    unit: MILLISECONDS
+
+  # Endpoint healthcheck service.
+  healthcheck:
+    threads: 3 # Threads core size used to check endpoint availability
+
+handlers:
+  request:
+    transaction:
+      header: X-Gravitee-Transaction-Id
+
+# Referenced properties
+ds:
+  mongodb:
+    dbname: gravitee
+    uri: ${MONGODB_ADDON_URI}
+  elastic:
+    uri: ${ES_ADDON_URI}
